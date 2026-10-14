@@ -1,0 +1,85 @@
+name: build
+
+on:
+  push:
+    branches: [main, master]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  EMSDK_VERSION: 6.0.12
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7.0.1
+
+      - uses: actions/setup-node@v7.1.0
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - uses: actions/cache@v6.1.0
+        with:
+          path: emsdk
+          key: emsdk-${{ env.EMSDK_VERSION }}
+
+      - name: Install Emscripten
+        run: |
+          if [ ! -d emsdk ]; then
+            git clone --depth 1 --branch "$EMSDK_VERSION" https://github.com/emscripten-core/emsdk.git
+          fi
+          ./emsdk/emsdk install "$EMSDK_VERSION"
+          ./emsdk/emsdk activate "$EMSDK_VERSION"
+
+      - name: Build
+        run: |
+          source ./emsdk/emsdk_env.sh
+          ./build.sh dist
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Compare with native build
+        run: npm test
+
+      - name: Collect release files
+        run: |
+          mkdir -p release
+          cp dist/gnugo.mjs dist/gnugo.wasm dist/gnugo.d.mts vendor/gnugo-3.8.tar.gz LICENSE release/
+
+      - uses: actions/upload-artifact@v7.0.2
+        with:
+          name: release
+          path: release
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v8.0.2
+        with:
+          name: release
+          path: release
+
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" release/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --title "$GITHUB_REF_NAME" \
+            --notes "GNU Go 3.8, compiled to WebAssembly with Emscripten $EMSDK_VERSION. GNU Go is free software under the GNU General Public License, version 3 or later. See LICENSE.
+
+          Corresponding source: gnugo-3.8.tar.gz (the unmodified GNU Go source) and the source code archive of this tag (the build scripts and patches)."

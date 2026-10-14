@@ -1,0 +1,20 @@
+{
+  "name": "gnugo-wasm",
+  "version": "0.0.0",
+  "private": true,
+  "description": "GNU Go 3.8, compiled to WebAssembly",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "build": "./build.sh",
+    "test": "node test/compare.mts build/gnugo-native test/fixtures/*.sgf",
+    "typecheck": "tsc"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "7.0.2"
+  }
+}
