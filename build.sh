@@ -74,7 +74,13 @@ emcc -O2 "$OBJ"/*.o -o "$OUT/gnugo.mjs" \
   -sINCOMING_MODULE_JS_API=wasmBinary,locateFile,instantiateWasm,stdin,stdout,stderr,onAbort \
   -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=8MB
 
+# The same objects, linked as a Node command-line program with real file
+# access, so the regression suite can run it in place of a native binary.
+echo "== stage 2: link test CLI"
+emcc -O2 "$OBJ"/*.o -o "$WORK/gnugo-wasm-cli.js" \
+  -sENVIRONMENT=node -sNODERAWFS=1 -sEXIT_RUNTIME=1 \
+  -sALLOW_MEMORY_GROWTH=1 -sSTACK_SIZE=8MB
+
 # gnugo.d.mts describes the options above and must change with them.
 cp "$ROOT/gnugo.d.mts" "$OUT/gnugo.d.mts"
-cp "$NATIVE/interface/gnugo" "$WORK/gnugo-native"
 ls -la "$OUT"/gnugo.mjs "$OUT"/gnugo.wasm "$OUT"/gnugo.d.mts

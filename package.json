@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "./build.sh",
-    "test": "node test/compare.mts build/gnugo-native test/fixtures/*.sgf",
+    "test": "node test/smoke.mts && test/regress.sh",
     "typecheck": "tsc"
   },
   "devDependencies": {

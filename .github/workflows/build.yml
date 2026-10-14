@@ -47,7 +47,7 @@ jobs:
       - name: Type-check
         run: npm run typecheck
 
-      - name: Compare with native build
+      - name: Test
         run: npm test
 
       - name: Collect release files
