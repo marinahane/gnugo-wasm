@@ -39,7 +39,7 @@ const text = new TextDecoder().decode(new Uint8Array(output))
 // "= \n\n= \n\n= alive\n\n"
 ```
 
-`callMain` is synchronous, so all input that your `stdin` function reads must be ready before you call it. Each instance can only call `callMain` once, so use a new instance for each request.
+`callMain` reads from `stdin` synchronously, so your stdin function must provide data immediately. You can only call `callMain` once per instance (subsequent calls return a nonzero exit status but do not throw), so you will want to call `createGnuGo` fresh for each run.
 
 While GTP replies go to `stdout`, GNU Go writes debug output, trace output, and error messages to `stderr`. If you do not give a `stderr` callback, `stderr` goes to `console.error`.
 
